@@ -11,6 +11,8 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "db:up": "docker-compose up -d",
     "db:down": "docker-compose down",
+    "migrations:run": "npx prisma migrate dev",
+    "migrations:deploy": "npx prisma migrate deploy",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",

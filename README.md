@@ -9,11 +9,6 @@ Api for a multi-user task manager web application.
 
 ## Installation
 
-```bash
-yarn
-```
-
-## Running the api
 - Create a ```.env``` file and use the ```.env.example``` to fill it as you wish.
 
 - if you have Docker and Docker-compose installed you can run:
@@ -25,9 +20,16 @@ yarn
 
 - Install dependencies
     ```bash
-    $ yarn
+    $ yarn   
     ```
-- Run Api
+- Apply db schema with migrations
+  ```bash
+  $ yarn migrations:run 
+  ```
+
+## Running the api
+
+- Run:
   ```bash
   # development
   $ yarn start
@@ -41,6 +43,7 @@ yarn
 
 ## Tests
 
+- Run:
   ```bash
   # unit tests
   $ yarn test
@@ -51,7 +54,6 @@ yarn
   # test coverage
   $ yarn test:cov
   ```
-
 
 
 ## License
