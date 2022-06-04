@@ -2,14 +2,37 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Auth } from 'src/auth/auth';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { hashSync } from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  constructor(protected auth: Auth) {}
+  constructor(protected auth: Auth, protected prisma: PrismaService) {}
 
   async register(createUserDto: CreateUserDto) {
     this.checkRegisterFields(createUserDto);
-    const token = await this.auth.signIn(createUserDto);
+
+    const { name, password } = createUserDto;
+
+    const hashPass = hashSync(password, 8);
+    const data = {
+      name,
+      password: hashPass,
+    };
+
+    const user = await this.prisma.user.create({ data }).catch((error) => {
+      if (error?.meta?.target?.includes('name')) {
+        throw new HttpException(
+          { message: 'User already exists' },
+          HttpStatus.CONFLICT,
+        );
+      }
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    });
+
+    const { id } = user;
+
+    const token = await this.auth.signIn({ id, name });
 
     console.log(await this.auth.verifyAndDecodeToken(token));
 
@@ -52,6 +75,11 @@ export class UserService {
     if (password?.length > 50) {
       err = true;
       errors.password = 'password max length is 50 characters';
+    }
+
+    if (password?.length < 8) {
+      err = true;
+      errors.password = 'password min length is 8 characters';
     }
 
     if (err) {
