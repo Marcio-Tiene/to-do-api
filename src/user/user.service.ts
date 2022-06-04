@@ -1,9 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { Auth } from 'src/auth/auth';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { hashSync } from 'bcrypt';
+import { Auth } from '../auth/auth.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { compareSync, hashSync } from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -40,15 +39,40 @@ export class UserService {
   }
 
   async login(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
-  }
+    this.checkRegisterFields(createUserDto);
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+    const { name, password } = createUserDto;
+    const errorMessage = 'user name and/or password is invalid';
 
-  remove(id: string) {
-    return `This action removes a #${id} user`;
+    const user = await this.prisma.user
+      .findUnique({
+        where: { name },
+        select: {
+          id: true,
+          name: true,
+          password: true,
+        },
+      })
+      .catch(() => {
+        throw new HttpException(
+          'Find user error',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      });
+
+    if (!user) {
+      throw new HttpException(errorMessage, HttpStatus.NOT_ACCEPTABLE);
+    }
+
+    const { password: hashedPassword, ...payload } = user;
+
+    const isValidPass = compareSync(password, hashedPassword);
+
+    if (!isValidPass) {
+      throw new HttpException(errorMessage, HttpStatus.NOT_ACCEPTABLE);
+    }
+    const token = await this.auth.signIn(payload);
+    return { token };
   }
 
   protected checkRegisterFields(createUserDto: CreateUserDto) {
@@ -64,7 +88,7 @@ export class UserService {
 
     if (name?.length > 200) {
       err = true;
-      errors.username = 'username max length is 200 characters';
+      errors.username = 'username maximun length is 200 characters';
     }
 
     if (!password) {
@@ -74,12 +98,12 @@ export class UserService {
 
     if (password?.length > 50) {
       err = true;
-      errors.password = 'password max length is 50 characters';
+      errors.password = 'password maximun length is 50 characters';
     }
 
     if (password?.length < 8) {
       err = true;
-      errors.password = 'password min length is 8 characters';
+      errors.password = 'password minimum length is 8 characters';
     }
 
     if (err) {

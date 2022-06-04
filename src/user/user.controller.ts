@@ -1,7 +1,6 @@
-import { Controller, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller()
 export class UserController {
@@ -13,17 +12,8 @@ export class UserController {
   }
 
   @Post('/login')
+  @HttpCode(200)
   async login(@Body() createUserDto: CreateUserDto) {
     return await this.userService.login(createUserDto);
-  }
-
-  @Patch('users/:id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
-  }
-
-  @Delete('users/:id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(id);
   }
 }
