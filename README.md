@@ -24,8 +24,14 @@ Api for a multi-user task manager web application.
     ```
 - Apply db schema with migrations
   ```bash
-  $ yarn migrations:run 
+  $ yarn migrations:run
   ```
+- You can mess with the db using the comand
+   ```bash
+  $ yarn db:show  
+    ```
+  and go to [http://localhost:5555](http://localhost:5555)
+
 
 ## Running the api
 
