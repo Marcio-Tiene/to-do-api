@@ -9,3 +9,32 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id   String @id @default(uuid())
+  name String @unique
+
+  projects Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id     String @id @default(uuid())
+  name   String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+  tasks  Task[]
+
+  @@map("projects")
+}
+
+model Task {
+  id        String  @id @default(uuid())
+  name      String
+  done      Boolean @default(false)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String  @map("project_id")
+
+  @@map("tasks")
+}
