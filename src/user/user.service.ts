@@ -9,9 +9,9 @@ export class UserService {
   constructor(protected auth: Auth, protected prisma: PrismaService) {}
 
   async register(createUserDto: CreateUserDto) {
-    this.checkRegisterFields(createUserDto);
+    const checkedUser = this.checkRegisterFields(createUserDto);
 
-    const { name, password } = createUserDto;
+    const { name, password } = checkedUser;
 
     const hashPass = hashSync(password, 8);
     const data = {
@@ -22,11 +22,14 @@ export class UserService {
     const user = await this.prisma.user.create({ data }).catch((error) => {
       if (error?.meta?.target?.includes('name')) {
         throw new HttpException(
-          { message: 'User already exists' },
+          { errors: { name: 'User already exists' } },
           HttpStatus.CONFLICT,
         );
       }
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        { errors: { general: error.message } },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     });
 
     const { id } = user;
@@ -39,9 +42,9 @@ export class UserService {
   }
 
   async login(createUserDto: CreateUserDto) {
-    this.checkRegisterFields(createUserDto);
+    const checkedUser = this.checkRegisterFields(createUserDto);
 
-    const { name, password } = createUserDto;
+    const { name, password } = checkedUser;
     const errorMessage = 'user name and/or password is invalid';
 
     const user = await this.prisma.user
@@ -55,13 +58,16 @@ export class UserService {
       })
       .catch(() => {
         throw new HttpException(
-          'Find user error',
+          { errors: { general: 'Find user error' } },
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       });
 
     if (!user) {
-      throw new HttpException(errorMessage, HttpStatus.NOT_ACCEPTABLE);
+      throw new HttpException(
+        { errors: { general: errorMessage } },
+        HttpStatus.NOT_ACCEPTABLE,
+      );
     }
 
     const { password: hashedPassword, ...payload } = user;
@@ -69,31 +75,48 @@ export class UserService {
     const isValidPass = compareSync(password, hashedPassword);
 
     if (!isValidPass) {
-      throw new HttpException(errorMessage, HttpStatus.NOT_ACCEPTABLE);
+      throw new HttpException(
+        { errors: { general: errorMessage } },
+        HttpStatus.NOT_ACCEPTABLE,
+      );
     }
     const token = await this.auth.signIn(payload);
     return { token };
   }
 
   protected checkRegisterFields(createUserDto: CreateUserDto) {
-    const { name, password } = createUserDto;
+    let { name, password } = createUserDto;
 
     let err = false;
     const errors: Record<string, any> = {};
 
     if (!name) {
       err = true;
-      errors.username = 'username is required';
+      errors.name = 'User name is required';
+    } else {
+      name = name.trim();
+    }
+
+    if (name?.length && name.includes(' ')) {
+      err = true;
+      errors.name = "passwords can't have spaces";
     }
 
     if (name?.length > 200) {
       err = true;
-      errors.username = 'username maximun length is 200 characters';
+      errors.name = 'User name maximun length is 200 characters';
     }
 
     if (!password) {
       err = true;
       errors.password = 'password is required';
+    } else {
+      password = password.trim();
+    }
+
+    if (password?.length && password.includes(' ')) {
+      err = true;
+      errors.password = "passwords can't have spaces";
     }
 
     if (password?.length > 50) {
@@ -106,8 +129,15 @@ export class UserService {
       errors.password = 'password minimum length is 8 characters';
     }
 
+    if (password?.length && password.includes(' ')) {
+      err = true;
+      errors.password = "passwords can't have spaces";
+    }
+
     if (err) {
       throw new HttpException({ errors }, HttpStatus.NOT_ACCEPTABLE);
     }
+
+    return { name, password };
   }
 }
