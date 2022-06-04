@@ -8,7 +8,7 @@ export class Auth {
     const jwt = new Promise((resolve) => {
       jsonwebtoken.sign(
         payload,
-        'secret',
+        process.env.TOKEN_SECRET,
         { expiresIn: '7d' },
         (err, encoded) => {
           if (err) {
@@ -25,7 +25,7 @@ export class Auth {
 
   async verifyAndDecodeToken(token: string) {
     const jwt = new Promise((resolve) => {
-      jsonwebtoken.verify(token, 'secret', (err, decoded) => {
+      jsonwebtoken.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
         if (err) {
           const isValid = false;
           return resolve({ isValid, token: {} });
