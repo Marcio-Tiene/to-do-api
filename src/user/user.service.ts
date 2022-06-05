@@ -36,8 +36,6 @@ export class UserService {
 
     const token = await this.auth.signIn({ id, name });
 
-    console.log(await this.auth.verifyAndDecodeToken(token));
-
     return { token };
   }
 

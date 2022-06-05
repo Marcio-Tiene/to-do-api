@@ -1,5 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import * as jsonwebtoken from 'jsonwebtoken';
+
+interface IToken {
+  name: string;
+  id: string;
+  exp: string;
+  iat: string;
+}
+interface IVerifiedToken {
+  isValid: boolean;
+  decodedToken?: IToken;
+}
 @Injectable()
 export class Auth {
   async signIn<Payload extends Record<any, any>>(
@@ -20,20 +31,20 @@ export class Auth {
       );
     });
 
-    return jwt as unknown as string;
+    return (await jwt) as unknown as string;
   }
 
-  async verifyAndDecodeToken(token: string) {
+  async verifyAndDecodeToken(token: string): Promise<IVerifiedToken> {
     const jwt = new Promise((resolve) => {
       jsonwebtoken.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
         if (err) {
           const isValid = false;
-          return resolve({ isValid, token: {} });
+          return resolve({ isValid });
         }
 
-        return resolve({ isValid: true, token: decoded });
+        return resolve({ isValid: true, decodedToken: decoded });
       });
     });
-    return jwt;
+    return (await jwt) as unknown as IVerifiedToken;
   }
 }

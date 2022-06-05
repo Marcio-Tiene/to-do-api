@@ -1,19 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Req,
+} from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
-@Controller('project')
+@Controller('projects')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
+  create(
+    @Body() createProjectDto: CreateProjectDto,
+    @Req() req: Request & { user?: string },
+  ) {
     return this.projectService.create(createProjectDto);
   }
 
   @Get()
-  findAll() {
+  findAll(@Req() req: Request & { user?: string }) {
     return this.projectService.findAll();
   }
 
