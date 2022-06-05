@@ -43,7 +43,7 @@ export class UserService {
     const checkedUser = this.checkRegisterFields(createUserDto);
 
     const { name, password } = checkedUser;
-    const errorMessage = 'user name and/or password is invalid';
+    const errorMessage = 'user name and/or password are wrong';
 
     const user = await this.prisma.user
       .findUnique({
