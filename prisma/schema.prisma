@@ -24,13 +24,14 @@ model User {
 
 model Project {
   id        String   @id @default(uuid())
-  name      String   @unique @db.VarChar(200)
+  name      String   @db.VarChar(200)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String   @map("user_id")
   tasks     Task[]
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@unique([name, userId])
   @@map("projects")
 }
 
@@ -45,5 +46,7 @@ model Task {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+
+  @@unique([name, projectId])
   @@map("tasks")
 }
