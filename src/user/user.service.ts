@@ -85,7 +85,7 @@ export class UserService {
   }
 
   protected checkRegisterFields(createUserDto: CreateUserDto) {
-    let { name, password } = createUserDto;
+    const { name, password } = createUserDto;
 
     let err = false;
     const errors: Record<string, any> = {};
@@ -93,13 +93,11 @@ export class UserService {
     if (!name) {
       err = true;
       errors.name = 'User name is required';
-    } else {
-      name = name.trim();
     }
 
     if (name?.length && name.includes(' ')) {
       err = true;
-      errors.name = "passwords can't have spaces";
+      errors.name = "User names can't have spaces";
     }
 
     if (name?.length > 200) {
@@ -110,8 +108,6 @@ export class UserService {
     if (!password) {
       err = true;
       errors.password = 'password is required';
-    } else {
-      password = password.trim();
     }
 
     if (password?.length && password.includes(' ')) {
