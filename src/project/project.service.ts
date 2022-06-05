@@ -1,26 +1,81 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
 export class ProjectService {
-  create(createProjectDto: CreateProjectDto) {
-    return 'This action adds a new project';
+  constructor(protected prisma: PrismaService) {}
+
+  protected errorHandler(error: any, message = '') {
+    if (error?.meta?.target?.includes('name')) {
+      throw new HttpException(
+        { errors: { name: message } },
+        HttpStatus.CONFLICT,
+      );
+    }
+    throw new HttpException(
+      { errors: { general: error.message } },
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+  async create(createProjectDto: CreateProjectDto, userId: string) {
+    const data = {
+      ...createProjectDto,
+      name: createProjectDto.name?.trim(),
+      userId,
+    };
+    const project = await this.prisma.project
+      .create({ data })
+      .catch((error) => {
+        this.errorHandler(error, 'Project already exists');
+      });
+
+    return project;
   }
 
-  findAll() {
-    return `This action returns all project`;
+  async findAll(userId: string) {
+    const projects = await this.prisma.project.findMany({ where: { userId } });
+    return projects;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} project`;
+  async findOne(id: string, userId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id, userId },
+    });
+    return project ?? {};
   }
 
-  update(id: number, updateProjectDto: UpdateProjectDto) {
-    return `This action updates a #${id} project`;
+  async update(id: string, updateProjectDto: UpdateProjectDto, userId: string) {
+    const project = await this.prisma.project
+      .updateMany({
+        where: { id, userId },
+        data: updateProjectDto,
+      })
+      .catch((error) => {
+        this.errorHandler(error);
+      });
+    if (!Object.keys(project[0]).length) {
+      this.errorHandler({ message: "You can't update this project" });
+    }
+
+    return project[0];
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} project`;
+  async remove(id: string, userId: string) {
+    const project = await this.findOne(id, userId);
+
+    if (!Object.keys(project).length) {
+      this.errorHandler({ message: 'You cant delete this project' });
+    }
+    await this.prisma.project
+      .deleteMany({
+        where: { id, userId },
+      })
+      .catch((error) => {
+        this.errorHandler(error);
+      });
+
+    return { message: 'deleted' };
   }
 }

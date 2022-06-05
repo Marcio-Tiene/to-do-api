@@ -19,28 +19,33 @@ export class ProjectController {
   @Post()
   create(
     @Body() createProjectDto: CreateProjectDto,
-    @Req() req: Request & { user?: string },
+    @Req() req: Request & { user: string },
   ) {
-    return this.projectService.create(createProjectDto);
+    return this.projectService.create(createProjectDto, req.user);
   }
 
   @Get()
-  findAll(@Req() req: Request & { user?: string }) {
-    return this.projectService.findAll();
+  findAll(@Req() req: Request & { user: string }) {
+    return this.projectService.findAll(req.user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectService.findOne(+id);
+  findOne(@Param('id') id: string, @Req() req: Request & { user: string }) {
+    console.log(id);
+    return this.projectService.findOne(id, req.user);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update(+id, updateProjectDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateProjectDto: UpdateProjectDto,
+    @Req() req: Request & { user: string },
+  ) {
+    return this.projectService.update(id, updateProjectDto, req.user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.projectService.remove(+id);
+  remove(@Param('id') id: string, @Req() req: Request & { user: string }) {
+    return this.projectService.remove(id, req.user);
   }
 }
