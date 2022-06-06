@@ -41,7 +41,7 @@ export class TaskService {
     return task;
   }
 
-  async findAllProjectTasks(userId, projectId) {
+  async findAllProjectTasks(userId: string, projectId: string) {
     const tasks = await this.prisma.task.findMany({
       where: { userId, projectId },
     });
@@ -52,11 +52,42 @@ export class TaskService {
     return `This action returns a #${id} task`;
   }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
-    return `This action updates a #${id} task`;
+  async update(id: string, userId: string, updateTaskDto: UpdateTaskDto) {
+    const task = await this.prisma.task
+      .updateMany({
+        where: { id, userId },
+        data: updateTaskDto,
+      })
+      .catch((error) => {
+        this.errorHandler(error);
+      });
+    if (!!task[0] && !Object.keys(task[0]).length) {
+      this.errorHandler({ message: "You can't update this task" });
+    }
+
+    return task[0];
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} task`;
+  async remove(id: string, userId: string) {
+    const task = await this.prisma.task
+      .findFirst({
+        where: { id, userId },
+      })
+      .catch(() => {
+        this.errorHandler({ message: 'You cant delete this task' });
+      });
+
+    if (!task) {
+      this.errorHandler({ message: 'You cant delete this task' });
+    }
+    await this.prisma.task
+      .deleteMany({
+        where: { id, userId },
+      })
+      .catch((error) => {
+        this.errorHandler(error);
+      });
+
+    return { message: 'deleted' };
   }
 }

@@ -43,13 +43,6 @@ export class ProjectService {
     return projects;
   }
 
-  async findOne(id: string, userId: string) {
-    const project = await this.prisma.project.findFirst({
-      where: { id, userId },
-    });
-    return project ?? {};
-  }
-
   async update(id: string, updateProjectDto: UpdateProjectDto, userId: string) {
     const { name } = updateProjectDto;
     if (!name?.trim()) {
@@ -71,9 +64,15 @@ export class ProjectService {
   }
 
   async remove(id: string, userId: string) {
-    const project = await this.findOne(id, userId);
+    const project = await this.prisma.project
+      .findFirst({
+        where: { id, userId },
+      })
+      .catch(() => {
+        this.errorHandler({ message: 'You cant delete this project' });
+      });
 
-    if (!Object.keys(project).length) {
+    if (!project) {
       this.errorHandler({ message: 'You cant delete this project' });
     }
     await this.prisma.project

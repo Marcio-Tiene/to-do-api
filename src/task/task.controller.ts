@@ -25,7 +25,7 @@ export class TaskController {
     return this.taskService.create(createTaskDto, req.user);
   }
 
-  @Get(':projectId')
+  @Get(':projectId/project')
   findAllProjectTasks(
     @Req() req: Request & { user: string },
     @Param('projectId') projectId: string,
@@ -33,18 +33,17 @@ export class TaskController {
     return this.taskService.findAllProjectTasks(req.user, projectId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.taskService.findOne(+id);
-  }
-
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-    return this.taskService.update(+id, updateTaskDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateTaskDto: UpdateTaskDto,
+    @Req() req: Request & { user: string },
+  ) {
+    return this.taskService.update(id, req.user, updateTaskDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taskService.remove(+id);
+  remove(@Param('id') id: string, @Req() req: Request & { user: string }) {
+    return this.taskService.remove(id, req.user);
   }
 }

@@ -29,12 +29,6 @@ export class ProjectController {
     return this.projectService.findAll(req.user);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string, @Req() req: Request & { user: string }) {
-    console.log(id);
-    return this.projectService.findOne(id, req.user);
-  }
-
   @Patch(':id')
   update(
     @Param('id') id: string,
