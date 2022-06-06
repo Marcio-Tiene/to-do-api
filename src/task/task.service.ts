@@ -55,7 +55,7 @@ export class TaskService {
   async update(id: string, userId: string, updateTaskDto: UpdateTaskDto) {
     const task = await this.prisma.task
       .updateMany({
-        where: { id, userId },
+        where: { id, userId, done: false },
         data: updateTaskDto,
       })
       .catch((error) => {
@@ -82,7 +82,7 @@ export class TaskService {
     }
     await this.prisma.task
       .deleteMany({
-        where: { id, userId },
+        where: { id, userId, done: false },
       })
       .catch((error) => {
         this.errorHandler(error);
