@@ -31,9 +31,13 @@ export class TaskService {
     if (!name?.trim()) {
       this.errorHandler({ message: "Task name can't be null" });
     }
-    const task = await this.prisma.task.create({
-      data,
-    });
+    const task = await this.prisma.task
+      .create({
+        data,
+      })
+      .catch((error) => {
+        this.errorHandler(error, 'Task already exists');
+      });
     return task;
   }
 
