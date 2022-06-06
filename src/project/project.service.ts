@@ -25,6 +25,10 @@ export class ProjectService {
       name: createProjectDto.name?.trim(),
       userId,
     };
+    const { name } = createProjectDto;
+    if (!name?.trim()) {
+      this.errorHandler({ message: "Title can't be null" });
+    }
     const project = await this.prisma.project
       .create({ data })
       .catch((error) => {
@@ -47,6 +51,10 @@ export class ProjectService {
   }
 
   async update(id: string, updateProjectDto: UpdateProjectDto, userId: string) {
+    const { name } = updateProjectDto;
+    if (!name?.trim()) {
+      this.errorHandler({ message: "Title can't be null" });
+    }
     const project = await this.prisma.project
       .updateMany({
         where: { id, userId },
@@ -55,7 +63,7 @@ export class ProjectService {
       .catch((error) => {
         this.errorHandler(error);
       });
-    if (!Object.keys(project[0]).length) {
+    if (!!project[0] && !Object.keys(project[0]).length) {
       this.errorHandler({ message: "You can't update this project" });
     }
 
